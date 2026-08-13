@@ -22,7 +22,7 @@ export default function EntryItem({ entry }: { entry: KakeiboEntry }) {
       : e.type === "チャージ"
         ? "text-on-surface-variant"
         : "text-expense";
-  const sign = e.type === "入金" ? "+" : "";
+  const sign = e.type === "入金" ? "+" : e.type === "出金" ? "-" : "";
 
   return (
     <li className="border-t border-white/5 first:border-t-0">
