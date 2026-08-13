@@ -55,16 +55,14 @@ export const SEED_MASTERS: Masters = {
     "不動産管理会社",
     "フリマアプリ",
   ],
-  // model.ts の前提: CHARGE_DESTINATIONS 4種を含む・「クレジット」接頭辞2枚・
-  // 残高計算用の現金/ICOCA を含むこと
+  // model.ts の前提: CHARGE_DESTINATIONS(QRペイ・ICOCA)を含む・
+  // 「クレジット」接頭辞2枚・残高計算用の現金/ICOCA を含むこと
   methods: [
     "現金",
     "クレジット1",
     "クレジット2",
-    "楽天ペイ",
-    "モバイルスイカ",
+    "QRペイ",
     "ICOCA",
-    "バーチャルカード",
     "口座振替",
   ],
 };
@@ -260,18 +258,18 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
       ])
     );
   }
-  // 楽天ペイ・モバイルスイカ・バーチャルカードはクレジット1からチャージ
+  // QRペイはクレジット1からチャージ
   // (クレジット1の引落はデフォルトで翌月 — model.defaultCreditMonth)
   entries.push(
     makeEntry(
       d(5),
       "チャージ",
       {
-        chargeTo: "楽天ペイ",
+        chargeTo: "QRペイ",
         method: "クレジット1",
         creditMonth: defaultCreditMonth(d(5), "クレジット1"),
       },
-      [line("楽天ペイチャージ", "", 5000)]
+      [line("QRペイチャージ", "", 5000)]
     )
   );
   if (chance(r, 0.7)) {
@@ -280,25 +278,11 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
         d(17),
         "チャージ",
         {
-          chargeTo: "モバイルスイカ",
+          chargeTo: "QRペイ",
           method: "クレジット1",
           creditMonth: defaultCreditMonth(d(17), "クレジット1"),
         },
-        [line("モバイルスイカチャージ", "", 3000)]
-      )
-    );
-  }
-  if (m % 2 === 0) {
-    entries.push(
-      makeEntry(
-        d(8),
-        "チャージ",
-        {
-          chargeTo: "バーチャルカード",
-          method: "クレジット1",
-          creditMonth: defaultCreditMonth(d(8), "クレジット1"),
-        },
-        [line("バーチャルカードチャージ", "", 2000)]
+        [line("QRペイチャージ", "", 3000)]
       )
     );
   }
@@ -306,7 +290,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // スーパー(2〜3日おき、明細2〜4行。値引き・数量>1 を意図的に混ぜて
   // 実額 = (金額 − 値引き) × 数量 の計算を見せる)
   // 現金払いは3回に1回の固定ローテーション(現金残高の下振れ防止)
-  const groceryMethods = ["楽天ペイ", "クレジット1", "現金"] as const;
+  const groceryMethods = ["QRペイ", "クレジット1", "現金"] as const;
   let visit = 0;
   for (let day = int(r, 2, 3); day <= daysInMonth; day += int(r, 2, 3)) {
     const method = groceryMethods[visit % groceryMethods.length];
@@ -331,20 +315,20 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
     );
   }
 
-  // コンビニ(モバイルスイカ払い)
+  // コンビニ(QRペイ払い)
   for (let i = 0; i < 2; i++) {
     entries.push(
-      makeEntry(d(int(r, 6, 24)), "出金", { payee: "コンビニ", method: "モバイルスイカ" }, [
+      makeEntry(d(int(r, 6, 24)), "出金", { payee: "コンビニ", method: "QRペイ" }, [
         line("お弁当", "外食", int(r, 498, 698)),
         line("お茶", "食費", int(r, 108, 160)),
       ])
     );
   }
 
-  // カフェ(楽天ペイ)
+  // カフェ(QRペイ)
   for (let i = 0; i < int(r, 1, 2); i++) {
     entries.push(
-      makeEntry(d(int(r, 5, 26)), "出金", { payee: "カフェ", method: "楽天ペイ" }, [
+      makeEntry(d(int(r, 5, 26)), "出金", { payee: "カフェ", method: "QRペイ" }, [
         line("カフェランチ", "外食", int(r, 850, 1200)),
       ])
     );
@@ -365,7 +349,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
     const chosen = new Set<number>();
     while (chosen.size < lineCount) chosen.add(int(r, 0, DRUGSTORE_ITEMS.length - 1));
     entries.push(
-      makeEntry(d(int(r, 3, 27)), "出金", { payee: "ドラッグストアあおば", method: "楽天ペイ" },
+      makeEntry(d(int(r, 3, 27)), "出金", { payee: "ドラッグストアあおば", method: "QRペイ" },
         [...chosen].map((idx) => {
           const item = DRUGSTORE_ITEMS[idx];
           return line(item.name, item.cat, int(r, item.lo, item.hi), {
@@ -396,9 +380,9 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
     );
   }
 
-  // ネット通販(バーチャルカード)
+  // ネット通販(QRペイ)
   entries.push(
-    makeEntry(d(int(r, 6, 20)), "出金", { payee: "ネット通販", method: "バーチャルカード" }, [
+    makeEntry(d(int(r, 6, 20)), "出金", { payee: "ネット通販", method: "QRペイ" }, [
       chance(r, 0.5)
         ? line("ゲームソフト", "趣味・娯楽", int(r, 5800, 7800))
         : line("Tシャツ", "衣類", int(r, 1980, 2980), { quantity: chance(r, 0.4) ? 2 : 1 }),
@@ -425,7 +409,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // フリマアプリ(衣類)
   if (chance(r, 0.6)) {
     entries.push(
-      makeEntry(d(int(r, 8, 24)), "出金", { payee: "フリマアプリ", method: "バーチャルカード" }, [
+      makeEntry(d(int(r, 8, 24)), "出金", { payee: "フリマアプリ", method: "QRペイ" }, [
         line("古着ジャケット", "衣類", int(r, 1500, 3500)),
       ])
     );
@@ -434,7 +418,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // 交際費(手土産)
   if (chance(r, 0.6)) {
     entries.push(
-      makeEntry(d(int(r, 10, 26)), "出金", { payee: "カフェ", method: "楽天ペイ" }, [
+      makeEntry(d(int(r, 10, 26)), "出金", { payee: "カフェ", method: "QRペイ" }, [
         line("焼き菓子詰め合わせ", "交際費", int(r, 1500, 2500)),
       ])
     );

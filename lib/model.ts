@@ -61,13 +61,8 @@ export function lineTotal(l: {
   return (l.unitPrice - l.discount) * l.quantity;
 }
 
-/** チャージ先に選べる支払方法(仕様_画面: この4つのみ) */
-export const CHARGE_DESTINATIONS = [
-  "楽天ペイ",
-  "モバイルスイカ",
-  "ICOCA",
-  "バーチャルカード",
-] as const;
+/** チャージ先に選べる支払方法(この2つのみ) */
+export const CHARGE_DESTINATIONS = ["QRペイ", "ICOCA"] as const;
 
 /** 支払方法マスタからチャージ先の選択肢を抽出(マスタ表記を正とする) */
 export function chargeDestinationOptions(methods: string[]): string[] {
