@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    container_name: kakeibo-demo
+    working_dir: /workspace
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace         # ホストの現フォルダをコンテナ内に同期（編集が即反映）
+      - /workspace/node_modules
+      - claude-code-config:/home/node/.claude  # Claude Code の認証情報・設定を永続化
+    tty: true                # コンテナを起動したままにする
+    stdin_open: true
+    # env_file:              # 実行時に環境変数が必要になったらコメントを外す
+    #   - .env.local
+
+volumes:
+  claude-code-config:        # コンテナを再作成しても認証情報が残る名前付きボリューム

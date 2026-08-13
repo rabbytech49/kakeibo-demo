@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#111316"/>
+  <!-- コイン(¥) -->
+  <circle cx="28.5" cy="12.5" r="5.2" fill="#f0e5a5"/>
+  <path d="M26.6 9.9 L28.5 12.7 L30.4 9.9 M28.5 12.7 V15.6 M26.8 13.3 H30.2 M26.8 14.8 H30.2"
+        stroke="#111316" stroke-width="1.1" stroke-linecap="round" fill="none"/>
+  <!-- 豚さん貯金箱 -->
+  <g fill="#f4b8cb">
+    <!-- しっぽ -->
+    <path d="M13 34.5 q-4.4 -0.6 -3 -3.9 q1 -2.3 3.2 -1.3" stroke="#f4b8cb" stroke-width="1.6"
+          stroke-linecap="round" fill="none"/>
+    <!-- 脚 -->
+    <rect x="21" y="45" width="5.6" height="8" rx="2.8"/>
+    <rect x="35.5" y="45" width="5.6" height="8" rx="2.8"/>
+    <!-- 耳 -->
+    <path d="M36.5 23.5 Q38.5 14.5 45.5 16.5 Q45 23 40 25 Z"/>
+    <!-- 胴体 -->
+    <ellipse cx="31" cy="36" rx="19" ry="14.5"/>
+    <!-- 鼻先 -->
+    <rect x="46.5" y="29.5" width="9" height="13" rx="4.5"/>
+  </g>
+  <!-- コイン投入口 -->
+  <rect x="23" y="22.6" width="11" height="2.8" rx="1.4" fill="#111316"/>
+  <!-- 目 -->
+  <circle cx="42" cy="29" r="1.9" fill="#111316"/>
+</svg>

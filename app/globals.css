@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+/* Material 3 ダークパレット(docs/designsample.html 準拠)。ダーク固定 */
+@theme {
+  --color-background: #111316;
+  --color-surface: #111316;
+  --color-surface-dim: #111316;
+  --color-surface-variant: #333538;
+  --color-surface-container-lowest: #0c0e11;
+  --color-surface-container-low: #1a1c1f;
+  --color-surface-container: #1e2023;
+  --color-surface-container-high: #282a2d;
+  --color-surface-container-highest: #333538;
+  --color-on-surface: #e2e2e6;
+  --color-on-surface-variant: #c2c7cd;
+  --color-outline: #8c9197;
+  --color-outline-variant: #42474c;
+
+  --color-primary: #abcae5;
+  --color-on-primary: #123348;
+  --color-primary-container: #7694ad;
+  --color-on-primary-container: #092c41;
+  --color-secondary: #b5c9d9;
+  --color-on-secondary: #1f333f;
+  --color-secondary-container: #384b58;
+  --color-on-secondary-container: #d1e5f5;
+  --color-tertiary: #eebd93;
+  --color-on-tertiary: #47290b;
+  --color-tertiary-container: #b48862;
+  --color-on-tertiary-container: #402305;
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  /* 金額の色分け(支出=ベビーピンク、収入=クリーム色で区別。errorの赤とは別トーン) */
+  --color-income: #f0e5a5;
+  --color-expense: #f4b8cb;
+
+  --font-display: var(--font-noto-sans-jp), sans-serif;
+  --font-body: var(--font-noto-sans-jp), sans-serif;
+  --font-label: var(--font-jetbrains-mono), monospace;
+}
+
+:root {
+  color-scheme: dark;
+  /* Recharts等が参照する互換変数 */
+  --background: #111316;
+  --foreground: #e2e2e6;
+  --surface: #1e2023;
+  --income: #f0e5a5;
+  --expense: #f4b8cb;
+  /* dataviz カテゴリカルパレット(ダークサーフェス用・検証済み) */
+  --chart-1: #3987e5;
+  --chart-2: #199e70;
+  --chart-3: #c98500;
+  --chart-4: #008300;
+  --chart-5: #9085e9;
+  --chart-6: #e66767;
+  --chart-7: #d55181;
+  --chart-8: #d95926;
+  --chart-other: #6f6e6a;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+}
+
+/* M3 filled テキストフィールド: 塗り+下線。フォーカスで下線が primary に光る */
+.m3-field {
+  width: 100%;
+  border-radius: 0.75rem 0.75rem 0.25rem 0.25rem;
+  background: var(--color-surface-container-highest);
+  border-bottom: 2px solid var(--color-outline-variant);
+  padding: 0.625rem 0.875rem;
+  color: var(--color-on-surface);
+}
+.m3-field::placeholder {
+  color: var(--color-outline);
+}
+.m3-field:focus {
+  outline: none;
+  border-bottom-color: var(--color-primary);
+}
+/* iOS WebKitはネイティブ外観のdate inputにborder-boxを適用せず、
+   width:100%+paddingで横にはみ出すため外観を無効化する */
+input[type="date"].m3-field {
+  -webkit-appearance: none;
+  appearance: none;
+}
+/* appearance解除後、iOSは値を中央寄せ表示するので他の欄と揃える */
+input[type="date"].m3-field::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+/* タップ時の縮小マイクロインタラクション */
+.active-scale:active {
+  transform: scale(0.95);
+  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 登録完了トースト: 下からふわっと現れる */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+.toast-in {
+  animation: toast-in 240ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active-scale:active {
+    transform: none;
+    transition: none;
+  }
+  .toast-in {
+    animation: none;
+  }
+}

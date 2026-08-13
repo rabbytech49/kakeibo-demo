@@ -1,0 +1,22 @@
+# バージョン管理
+.git
+
+# 機密情報（コンテナに入れない）
+.env
+.env.*
+secrets/
+*.pem
+*.key
+
+# 依存物・ビルド成果物
+node_modules/
+.next/
+dist/
+build/
+
+# 開発環境設定（イメージに含める必要なし）
+.claude/
+.devcontainer/
+Dockerfile
+compose.yaml
+.dockerignore
