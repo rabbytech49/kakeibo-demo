@@ -41,6 +41,7 @@ yarn-error.log*
 
 # ローカル専用の引き継ぎドキュメント(実運用の内部情報を含むため公開しない)
 docs/plan.md
+docs/memo.md
 
 # typescript
 *.tsbuildinfo
