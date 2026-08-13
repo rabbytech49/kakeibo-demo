@@ -55,14 +55,14 @@ export const SEED_MASTERS: Masters = {
     "不動産管理会社",
     "フリマアプリ",
   ],
-  // model.ts の前提: CHARGE_DESTINATIONS(QRペイ・ICOCA)を含む・
-  // 「クレジット」接頭辞2枚・残高計算用の現金/ICOCA を含むこと
+  // model.ts の前提: CHARGE_DESTINATIONS(QRペイ・IKOCCA)を含む・
+  // 「クレジット」接頭辞2枚・残高計算用の現金/IKOCCA を含むこと
   methods: [
     "現金",
     "クレジット1",
     "クレジット2",
     "QRペイ",
-    "ICOCA",
+    "IKOCCA",
     "口座振替",
   ],
 };
@@ -190,7 +190,7 @@ const DRUGSTORE_ITEMS = [
 
 /**
  * 1ヶ月分のエントリを日付順不同で生成する(当月分の日付制限は呼び出し側)。
- * 現金・ICOCA残高が構成上マイナスにならないよう、現金払いの割合や
+ * 現金・IKOCCA残高が構成上マイナスにならないよう、現金払いの割合や
  * チャージ日を固定的に配置している(最終的に assert でも検証する)。
  */
 function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
@@ -207,8 +207,8 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
       makeEntry(
         d(1),
         "チャージ",
-        { chargeTo: "ICOCA", method: "現金", memo: "繰越" },
-        [line("ICOCA残高繰越", "", 3000)]
+        { chargeTo: "IKOCCA", method: "現金", memo: "繰越" },
+        [line("IKOCCA残高繰越", "", 3000)]
       )
     );
   }
@@ -245,16 +245,16 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
     )
   );
 
-  // チャージ: ICOCAは月初(交通費より先に残高を作る)、原資は現金
+  // チャージ: IKOCCAは月初(交通費より先に残高を作る)、原資は現金
   entries.push(
-    makeEntry(d(4), "チャージ", { chargeTo: "ICOCA", method: "現金" }, [
-      line("ICOCAチャージ", "", 3000),
+    makeEntry(d(4), "チャージ", { chargeTo: "IKOCCA", method: "現金" }, [
+      line("IKOCCAチャージ", "", 3000),
     ])
   );
   if (chance(r, 0.5)) {
     entries.push(
-      makeEntry(d(22), "チャージ", { chargeTo: "ICOCA", method: "現金" }, [
-        line("ICOCAチャージ", "", 3000),
+      makeEntry(d(22), "チャージ", { chargeTo: "IKOCCA", method: "現金" }, [
+        line("IKOCCAチャージ", "", 3000),
       ])
     );
   }
@@ -334,10 +334,10 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
     );
   }
 
-  // 交通費(ICOCA。チャージ日(4日)以降に配置し、月内合計はチャージ額未満に収める)
+  // 交通費(IKOCCA。チャージ日(4日)以降に配置し、月内合計はチャージ額未満に収める)
   for (let i = 0; i < int(r, 3, 4); i++) {
     entries.push(
-      makeEntry(d(int(r, 5, 28)), "出金", { payee: "駅ナカ売店", method: "ICOCA" }, [
+      makeEntry(d(int(r, 5, 28)), "出金", { payee: "駅ナカ売店", method: "IKOCCA" }, [
         line("電車運賃", "交通費", int(r, 15, 42) * 10),
       ])
     );
@@ -439,7 +439,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
 // ---------- 残高検証・クレジットステータス ----------
 
 /**
- * data.ts の getBalances と同じ規則で現金・ICOCA残高を時系列に検証する。
+ * data.ts の getBalances と同じ規則で現金・IKOCCA残高を時系列に検証する。
  * 同一日内は 入金 → チャージ → 出金 の順で処理する(生成データの前提)
  */
 function assertNonNegativeBalances(entries: KakeiboEntry[]): void {
@@ -448,20 +448,20 @@ function assertNonNegativeBalances(entries: KakeiboEntry[]): void {
     (a, b) => a.date.localeCompare(b.date) || typeOrder[a.type] - typeOrder[b.type]
   );
   let cash = 0;
-  let icoca = 0;
+  let ikocca = 0;
   for (const e of sorted) {
     if (e.type === "入金") {
       cash += e.total;
     } else if (e.type === "出金") {
       if (e.method === "現金") cash -= e.total;
-      if (e.method === "ICOCA") icoca -= e.total;
+      if (e.method === "IKOCCA") ikocca -= e.total;
     } else {
       if (e.method === "現金") cash -= e.total;
-      if (e.chargeTo === "ICOCA") icoca += e.total;
+      if (e.chargeTo === "IKOCCA") ikocca += e.total;
     }
-    if (cash < 0 || icoca < 0) {
+    if (cash < 0 || ikocca < 0) {
       throw new Error(
-        `シードデータの残高が負になりました(${e.date}: 現金=${cash}, ICOCA=${icoca})`
+        `シードデータの残高が負になりました(${e.date}: 現金=${cash}, IKOCCA=${ikocca})`
       );
     }
   }

@@ -28,7 +28,7 @@ const MENU = [
   {
     href: "/balance",
     title: "残高",
-    description: "現金・ICOCAの現在残高",
+    description: "現金・IKOCCAの現在残高",
     icon: (
       <path
         strokeLinecap="round"

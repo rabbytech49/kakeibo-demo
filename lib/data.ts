@@ -84,7 +84,7 @@ export async function getMonthlySummary(month: string): Promise<MonthlySummary> 
 }
 
 // ============================================================
-// 残高(仕様_画面: 現金とICOCAを明細全件から計算)
+// 残高(仕様_画面: 現金とIKOCCAを明細全件から計算)
 // ============================================================
 
 export interface WalletBalance {
@@ -99,30 +99,30 @@ export interface BalanceSummary {
 
 /**
  * 現金: 入金(+) / 支払方法=現金の出金・チャージ(−)
- * ICOCA: チャージ先=ICOCAのチャージ(+) / 支払方法=ICOCAの出金(−)
+ * IKOCCA: チャージ先=IKOCCAのチャージ(+) / 支払方法=IKOCCAの出金(−)
  * ※初期残高は備考「繰越」の入金・チャージレコードが起点(通常レコードと同じ扱いで加算される)
  */
 export async function getBalances(): Promise<BalanceSummary> {
   const entries = await getEntries();
   let cash = 0;
-  let icoca = 0;
+  let ikocca = 0;
   for (const e of entries) {
     if (e.type === "入金") {
       cash += e.total;
     } else if (e.type === "出金") {
       if (e.method === "現金") cash -= e.total;
-      if (e.method === "ICOCA") icoca -= e.total;
+      if (e.method === "IKOCCA") ikocca -= e.total;
     } else {
       // チャージ: チャージ先に加算し、原資が現金なら現金から減算
       if (e.method === "現金") cash -= e.total;
-      if (e.chargeTo === "ICOCA") icoca += e.total;
+      if (e.chargeTo === "IKOCCA") ikocca += e.total;
     }
   }
   return {
     asOf: todayJST(),
     wallets: [
       { name: "現金", amount: cash },
-      { name: "ICOCA", amount: icoca },
+      { name: "IKOCCA", amount: ikocca },
     ],
   };
 }

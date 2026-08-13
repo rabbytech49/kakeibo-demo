@@ -62,7 +62,7 @@ export function lineTotal(l: {
 }
 
 /** チャージ先に選べる支払方法(この2つのみ) */
-export const CHARGE_DESTINATIONS = ["QRペイ", "ICOCA"] as const;
+export const CHARGE_DESTINATIONS = ["QRペイ", "IKOCCA"] as const;
 
 /** 支払方法マスタからチャージ先の選択肢を抽出(マスタ表記を正とする) */
 export function chargeDestinationOptions(methods: string[]): string[] {
