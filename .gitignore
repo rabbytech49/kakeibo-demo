@@ -43,6 +43,10 @@ yarn-error.log*
 docs/plan.md
 docs/memo.md
 
+# ローカル専用のエージェント向け指示ファイル
+CLAUDE.md
+AGENTS.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
