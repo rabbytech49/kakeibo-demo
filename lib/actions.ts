@@ -14,6 +14,7 @@ import {
   type EntryType,
   type LineInput,
 } from "@/lib/store";
+import { OverlayLimitError } from "@/lib/overlay";
 import { signOut } from "@/lib/auth";
 
 export interface ActionState {
@@ -115,6 +116,7 @@ export async function createEntryAction(
     revalidateAll();
     return { success: true };
   } catch (e) {
+    if (e instanceof OverlayLimitError) return { error: e.message };
     console.error("追加に失敗:", e);
     return { error: "追加に失敗しました。時間をおいて再試行してください" };
   }
@@ -133,6 +135,7 @@ export async function updateEntryAction(
     await updateEntry(id, parsed);
     revalidateAll();
   } catch (e) {
+    if (e instanceof OverlayLimitError) return { error: e.message };
     console.error("更新に失敗:", e);
     return { error: "更新に失敗しました。時間をおいて再試行してください" };
   }
@@ -150,6 +153,7 @@ export async function deleteEntryAction(
     await deleteEntry(id);
     revalidateAll();
   } catch (e) {
+    if (e instanceof OverlayLimitError) return { error: e.message };
     console.error("削除に失敗:", e);
     return { error: "削除に失敗しました。時間をおいて再試行してください" };
   }
@@ -173,6 +177,7 @@ export async function updateCreditStatusAction(
     revalidatePath("/credit");
     return { success: true };
   } catch (e) {
+    if (e instanceof OverlayLimitError) return { error: e.message };
     console.error("ステータス更新に失敗:", e);
     return { error: "ステータスの更新に失敗しました" };
   }

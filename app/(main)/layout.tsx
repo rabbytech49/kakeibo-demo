@@ -64,7 +64,7 @@ export default async function MainLayout({
         </div>
       </header>
       <p className="border-b border-white/5 bg-surface-container px-5 py-1.5 text-center text-[11px] leading-relaxed text-on-surface-variant">
-        ポートフォリオ用デモ — データは自動生成のサンプルです。追加・編集はサーバー再起動時にリセットされます。
+        ポートフォリオ用デモ — サンプルデータは自動生成です。追加・編集はこのブラウザ内にのみ保存されます。
       </p>
       <main className="mx-auto w-full max-w-md flex-1 px-5 pb-28 pt-5">
         {children}

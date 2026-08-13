@@ -25,7 +25,7 @@ export default async function LoginPage({
           ポートフォリオ用のデモです。ワンクリックでお試しいただけます
         </p>
         <p className="mt-1 text-xs text-on-surface-variant">
-          データはサンプルで定期的にリセットされます
+          データはサンプルです。追加・編集はこのブラウザ内にのみ保存されます
         </p>
       </div>
       {error && (

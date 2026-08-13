@@ -18,7 +18,10 @@ import {
 } from "@/lib/model";
 import { addMonths, currentMonthJST, todayJST } from "@/lib/date";
 
-/** AppSheetのUNIQUEID()と同形式の8桁hex(本番版 sheets.ts から移設) */
+/**
+ * AppSheetのUNIQUEID()と同形式の8桁hex(本番版 sheets.ts から移設)。
+ * フォーム経由の新規追加用(追加分はCookie差分に保存されるため非決定でよい)
+ */
 export function uniqueId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(4));
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -102,6 +105,17 @@ function chance(r: Rng, p: number): boolean {
   return r() < p;
 }
 
+/**
+ * PRNG由来の8桁hex ID(uniqueId と同形式)。シードのIDはインスタンス間で
+ * 一致している必要があるため、暗号乱数ではなく決定的なPRNGから導出する
+ * (Vercelでは複数インスタンスが各自シードを生成する — 追補1)
+ */
+function idFromRng(r: Rng): string {
+  return Math.floor(r() * 0x100000000)
+    .toString(16)
+    .padStart(8, "0");
+}
+
 /** 10円単位に丸める(公共料金などの見た目用) */
 function round10(n: number): number {
   return Math.round(n / 10) * 10;
@@ -118,15 +132,16 @@ interface EntryHead {
 }
 
 function makeEntry(
+  newId: () => string,
   date: string,
   type: EntryType,
   head: EntryHead,
   lines: LineInput[]
 ): KakeiboEntry {
-  const id = uniqueId();
+  const id = newId();
   const fullLines: MeisaiLine[] = lines.map((l) => ({
     ...l,
-    id: uniqueId(),
+    id: newId(),
     entryId: id,
   }));
   return {
@@ -198,13 +213,21 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   const [y, m] = month.split("-").map(Number);
   const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const d = (day: number) => `${month}-${String(day).padStart(2, "0")}`;
+  // シードのIDもPRNG由来で決定化する(生成順を変えるとIDが変わるので注意)
+  const newId = () => idFromRng(r);
+  const mk = (
+    date: string,
+    type: EntryType,
+    head: EntryHead,
+    lines: LineInput[]
+  ) => makeEntry(newId, date, type, head, lines);
   const entries: KakeiboEntry[] = [];
 
   // 繰越(最初の月の1日): data.ts の残高計算はこのレコードが起点
   if (isFirstMonth) {
     entries.push(
-      makeEntry(d(1), "入金", { memo: "繰越" }, [line("繰越金", "", 50000)]),
-      makeEntry(
+      mk(d(1), "入金", { memo: "繰越" }, [line("繰越金", "", 50000)]),
+      mk(
         d(1),
         "チャージ",
         { chargeTo: "IKOCCA", method: "現金", memo: "繰越" },
@@ -215,25 +238,25 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
 
   // 給料25日(入金は支払先・支払方法空欄 — actions.ts の parsePayload 仕様)
   entries.push(
-    makeEntry(d(25), "入金", { memo: "給料" }, [line("給料", "", 280000)])
+    mk(d(25), "入金", { memo: "給料" }, [line("給料", "", 280000)])
   );
 
   // 家賃27日(口座振替)
   entries.push(
-    makeEntry(d(27), "出金", { payee: "不動産管理会社", method: "口座振替" }, [
+    mk(d(27), "出金", { payee: "不動産管理会社", method: "口座振替" }, [
       line("家賃", "家賃", 78000),
     ])
   );
 
   // 光熱費・通信費
   entries.push(
-    makeEntry(d(12), "出金", { payee: "電力会社", method: "口座振替" }, [
+    mk(d(12), "出金", { payee: "電力会社", method: "口座振替" }, [
       line("電気代", "水道光熱費", round10(int(r, 7000, 11500))),
     ]),
-    makeEntry(d(18), "出金", { payee: "水道局", method: "口座振替" }, [
+    mk(d(18), "出金", { payee: "水道局", method: "口座振替" }, [
       line("水道代", "水道光熱費", round10(int(r, 3200, 4400))),
     ]),
-    makeEntry(
+    mk(
       d(21),
       "出金",
       {
@@ -247,13 +270,13 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
 
   // チャージ: IKOCCAは月初(交通費より先に残高を作る)、原資は現金
   entries.push(
-    makeEntry(d(4), "チャージ", { chargeTo: "IKOCCA", method: "現金" }, [
+    mk(d(4), "チャージ", { chargeTo: "IKOCCA", method: "現金" }, [
       line("IKOCCAチャージ", "", 3000),
     ])
   );
   if (chance(r, 0.5)) {
     entries.push(
-      makeEntry(d(22), "チャージ", { chargeTo: "IKOCCA", method: "現金" }, [
+      mk(d(22), "チャージ", { chargeTo: "IKOCCA", method: "現金" }, [
         line("IKOCCAチャージ", "", 3000),
       ])
     );
@@ -261,7 +284,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // QRペイはクレジット1からチャージ
   // (クレジット1の引落はデフォルトで翌月 — model.defaultCreditMonth)
   entries.push(
-    makeEntry(
+    mk(
       d(5),
       "チャージ",
       {
@@ -274,7 +297,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   );
   if (chance(r, 0.7)) {
     entries.push(
-      makeEntry(
+      mk(
         d(17),
         "チャージ",
         {
@@ -306,7 +329,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
       });
     });
     entries.push(
-      makeEntry(d(day), "出金", {
+      mk(d(day), "出金", {
         payee: "スーパーみどり",
         method,
         creditMonth:
@@ -318,7 +341,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // コンビニ(QRペイ払い)
   for (let i = 0; i < 2; i++) {
     entries.push(
-      makeEntry(d(int(r, 6, 24)), "出金", { payee: "コンビニ", method: "QRペイ" }, [
+      mk(d(int(r, 6, 24)), "出金", { payee: "コンビニ", method: "QRペイ" }, [
         line("お弁当", "外食", int(r, 498, 698)),
         line("お茶", "食費", int(r, 108, 160)),
       ])
@@ -328,7 +351,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // カフェ(QRペイ)
   for (let i = 0; i < int(r, 1, 2); i++) {
     entries.push(
-      makeEntry(d(int(r, 5, 26)), "出金", { payee: "カフェ", method: "QRペイ" }, [
+      mk(d(int(r, 5, 26)), "出金", { payee: "カフェ", method: "QRペイ" }, [
         line("カフェランチ", "外食", int(r, 850, 1200)),
       ])
     );
@@ -337,7 +360,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // 交通費(IKOCCA。チャージ日(4日)以降に配置し、月内合計はチャージ額未満に収める)
   for (let i = 0; i < int(r, 3, 4); i++) {
     entries.push(
-      makeEntry(d(int(r, 5, 28)), "出金", { payee: "駅ナカ売店", method: "IKOCCA" }, [
+      mk(d(int(r, 5, 28)), "出金", { payee: "駅ナカ売店", method: "IKOCCA" }, [
         line("電車運賃", "交通費", int(r, 15, 42) * 10),
       ])
     );
@@ -349,7 +372,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
     const chosen = new Set<number>();
     while (chosen.size < lineCount) chosen.add(int(r, 0, DRUGSTORE_ITEMS.length - 1));
     entries.push(
-      makeEntry(d(int(r, 3, 27)), "出金", { payee: "ドラッグストアあおば", method: "QRペイ" },
+      mk(d(int(r, 3, 27)), "出金", { payee: "ドラッグストアあおば", method: "QRペイ" },
         [...chosen].map((idx) => {
           const item = DRUGSTORE_ITEMS[idx];
           return line(item.name, item.cat, int(r, item.lo, item.hi), {
@@ -364,7 +387,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   {
     const day = int(r, 16, 26);
     entries.push(
-      makeEntry(
+      mk(
         d(day),
         "出金",
         {
@@ -382,7 +405,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
 
   // ネット通販(QRペイ)
   entries.push(
-    makeEntry(d(int(r, 6, 20)), "出金", { payee: "ネット通販", method: "QRペイ" }, [
+    mk(d(int(r, 6, 20)), "出金", { payee: "ネット通販", method: "QRペイ" }, [
       chance(r, 0.5)
         ? line("ゲームソフト", "趣味・娯楽", int(r, 5800, 7800))
         : line("Tシャツ", "衣類", int(r, 1980, 2980), { quantity: chance(r, 0.4) ? 2 : 1 }),
@@ -393,7 +416,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   if (m % 2 === 1) {
     const day = int(r, 5, 15);
     entries.push(
-      makeEntry(
+      mk(
         d(day),
         "出金",
         {
@@ -409,7 +432,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // フリマアプリ(衣類)
   if (chance(r, 0.6)) {
     entries.push(
-      makeEntry(d(int(r, 8, 24)), "出金", { payee: "フリマアプリ", method: "QRペイ" }, [
+      mk(d(int(r, 8, 24)), "出金", { payee: "フリマアプリ", method: "QRペイ" }, [
         line("古着ジャケット", "衣類", int(r, 1500, 3500)),
       ])
     );
@@ -418,7 +441,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // 交際費(手土産)
   if (chance(r, 0.6)) {
     entries.push(
-      makeEntry(d(int(r, 10, 26)), "出金", { payee: "カフェ", method: "QRペイ" }, [
+      mk(d(int(r, 10, 26)), "出金", { payee: "カフェ", method: "QRペイ" }, [
         line("焼き菓子詰め合わせ", "交際費", int(r, 1500, 2500)),
       ])
     );
@@ -427,7 +450,7 @@ function generateMonth(month: string, isFirstMonth: boolean): KakeiboEntry[] {
   // クリニック(現金)
   if (chance(r, 0.5)) {
     entries.push(
-      makeEntry(d(int(r, 6, 20)), "出金", { payee: "クリニック", method: "現金" }, [
+      mk(d(int(r, 6, 20)), "出金", { payee: "クリニック", method: "現金" }, [
         line("診察代", "医療費", int(r, 1500, 2800)),
       ])
     );
