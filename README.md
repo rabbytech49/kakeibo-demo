@@ -49,22 +49,6 @@
 本番版で実施したセキュリティ対策（認可の多層防御、トークンのブラウザ非露出、
 シート数式インジェクション対策など）の記録を [docs/security-measures.md](docs/security-measures.md) にまとめています。
 
-## ローカル開発
-
-```bash
-git clone <このリポジトリ>
-cd kakeibo-demo
-npm install
-
-# 環境変数は AUTH_SECRET のみ
-cp .env.local.example .env.local
-# .env.local の AUTH_SECRET に `openssl rand -base64 32` の出力を設定
-
-npm run dev
-```
-
-ブラウザで http://localhost:3000 を開き、「デモユーザーとしてログイン」でお試しください。
-
 ## ライセンス
 
 このリポジトリはポートフォリオとしての閲覧を目的に公開しています。
