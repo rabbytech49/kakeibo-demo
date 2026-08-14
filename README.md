@@ -2,7 +2,7 @@
 
 スマホから収支を入力する家計簿アプリのポートフォリオ用デモです。
 
-**デモURL**: (https://kakeibo-demo-three.vercel.app/)
+**デモURL**: (https://kakeibo-demo-three.vercel.app/login)
 
 ログイン画面の「デモユーザーとしてログイン」を押すだけで、ワンクリックでお試しいただけます。
 サンプルデータは毎日自動生成され、追加・編集した内容はお使いのブラウザのCookieにのみ保存されます
